@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulador de Matemáticas (Interactivo)</title>
+  <style>
+    :root{
+      /* Paleta tipo imagen (azules + fondo claro) */
+      --bg:#eef3fb;
+      --card:#ffffff;
+      --muted:#64748b;
+      --text:#0f172a;
+
+      --accent:#1769ff;      /* azul principal */
+      --accent-2:#0b4fd6;    /* azul profundo */
+      --ok:#1769ff;          /* en la imagen predomina azul */
+      --bad:#ef4444;         /* rojo suave para errores */
+
+      --line:#dbe7ff;
+
+      /* Sombra tipo “banda azul” en la parte inferior como la imagen */
+      --shadow: 0 10px 0 rgba(12,102,255,.22), 0 18px 30px rgba(2,30,84,.10);
+
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+
+    /* Fondo claro con cuadricula suave */
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:stretch;
+
+      background:
+        linear-gradient(#e9f0ff 1px, transparent 1px),
+        linear-gradient(90deg, #e9f0ff 1px, transparent 1px),
+        linear-gradient(180deg, #f7faff, var(--bg));
+      background-size: 34px 34px, 34px 34px, auto;
+    }
+
+    .wrap{
+      width:min(1100px, 92vw);
+      margin: 26px auto;
+      display:grid;
+      grid-template-columns: 1.25fr .9fr;
+      gap: 18px;
+    }
+
+    header{
+      grid-column: 1 / -1;
+      display:flex;
+      gap:16px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 16px;
+
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.90);
+      box-shadow: 0 10px 20px rgba(2,30,84,.10);
+      backdrop-filter: blur(6px);
+    }
+
+    header .title{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    header h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing:.2px;
+    }
+    header p{
+      margin:0;
+      color:var(--muted);
+      font-size: 13px;
+      line-height:1.35;
+    }
+
+    .badge{
+      display:flex; gap:10px; align-items:center;
+      padding: 10px 12px;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 13px;
+      white-space:nowrap;
+      box-shadow: 0 8px 16px rgba(2,30,84,.08);
+    }
+
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(23,105,255,.18);
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .card .hd{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      background: linear-gradient(180deg, #ffffff, #f6f9ff);
+    }
+
+    .card .hd h2{
+      margin:0;
+      font-size: 15px;
+      letter-spacing:.2px;
+    }
+    .card .hd small{
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .card .bd{
+      padding: 16px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select, input[type="text"], input[type="number"]{
+      width:100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      outline:none;
+      box-shadow: 0 8px 16px rgba(2,30,84,.06);
+    }
+
+    select:focus, input:focus{
+      border-color: rgba(23,105,255,.55);
+      box-shadow: 0 0 0 4px rgba(23,105,255,.16);
+    }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      transition: transform .05s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 10px 18px rgba(2,30,84,.10);
+    }
+    .btn:hover{
+      background: #f4f8ff;
+      border-color: rgba(23,105,255,.45);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.primary{
+      background: linear-gradient(180deg, #2a7bff, var(--accent));
+      border-color: rgba(23,105,255,.55);
+      color:#fff;
+    }
+
+    .btn.good{
+      background: linear-gradient(180deg, #2a7bff, var(--accent));
+      border-color: rgba(23,105,255,.55);
+      color:#fff;
+    }
+
+    .btn.bad{
+      background: #ffffff;
+      border-color: rgba(239,68,68,.35);
+      color:#b91c1c;
+    }
+
+    .exercise{
+      margin-top: 12px;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: #f7faff;
+    }
+
+    .exercise .q{
+      font-size: 16px;
+      line-height:1.45;
+      margin:0 0 8px 0;
+    }
+
+    .exercise .meta{
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .mono{
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: #ffffff;
+      color: var(--accent-2);
+    }
+
+    .feedback{
+      margin-top: 12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: #ffffff;
+      color: var(--muted);
+      min-height: 48px;
+      line-height: 1.35;
+    }
+    .feedback.ok{
+      border-color: rgba(23,105,255,.35);
+      background: #eff6ff;
+      color: var(--accent-2);
+    }
+    .feedback.bad{
+      border-color: rgba(239,68,68,.28);
+      background: #fff1f2;
+      color: #9f1239;
+    }
+
+    details{
+      margin-top: 10px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: #ffffff;
+      overflow:hidden;
+      box-shadow: 0 10px 18px rgba(2,30,84,.06);
+    }
+    details > summary{
+      padding: 12px 12px;
+      cursor:pointer;
+      color: var(--text);
+      font-weight: 900;
+      outline:none;
+      list-style:none;
+    }
+    details > summary::-webkit-details-marker{display:none}
+    details .inside{
+      padding: 0 12px 12px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .inside code{
+      font-family: var(--mono);
+      color: var(--text);
+      background: #f7faff;
+      border:1px solid var(--line);
+      padding: 2px 6px;
+      border-radius: 10px;
+      white-space:nowrap;
+    }
+
+    .score{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .score b{ color: var(--text); }
+
+    .kpi{
+      padding: 8px 10px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 8px 16px rgba(2,30,84,.06);
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    th, td{
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th{ text-align:left; color: var(--text); font-size: 12px; }
+
+    .tag{
+      display:inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--accent-2);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .note{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 960px){
+      .wrap{ grid-template-columns: 1fr; }
+      header{ flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Simulador de Matemáticas</h1>
+        <p>Practica por <b>grado</b> y <b>tema</b>. Genera ejercicios, responde, recibe retroalimentación y revisa la solución paso a paso.</p>
+      </div>
+      <div class="badge" title="Modo interactivo">
+        <span class="dot"></span>
+        Interactivo • HTML5/CSS/JS
+      </div>
+    </header>
+
+    <!-- Panel principal -->
+    <section class="card" aria-label="Simulador">
+      <div class="hd">
+        <div>
+          <h2>Configura tu práctica</h2>
+          <small>Elige un tema y genera ejercicios aleatorios.</small>
+        </div>
+        <div class="score">
+          <span class="kpi">✅ Aciertos: <b id="hits">0</b></span>
+          <span class="kpi">❌ Errores: <b id="fails">0</b></span>
+          <span class="kpi">🎯 Racha: <b id="streak">0</b></span>
+        </div>
+      </div>
+
+      <div class="bd">
+        <div class="grid">
+          <div>
+            <label for="grade">Grado</label>
+            <select id="grade">
+              <option value="6">6° (Básico)</option>
+              <option value="7">7° (Intermedio)</option>
+              <option value="8">8° (Intermedio+)</option>
+              <option value="9">9° (Avanzado)</option>
+              <option value="10">10° (Avanzado+)</option>
+              <option value="11">11° (Pre-Universitario)</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="topic">Tema</label>
+            <select id="topic">
+              <option value="stats">Estadística (media/mediana/moda)</option>
+              <option value="fractions">Fracciones (operaciones)</option>
+              <option value="linear">Ecuaciones lineales (ax + b = c)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="btnNew">➕ Nuevo ejercicio</button>
+          <button class="btn" id="btnHint">💡 Pista</button>
+          <button class="btn" id="btnSolution">🧾 Ver solución</button>
+          <button class="btn bad" id="btnReset">🧹 Reiniciar</button>
+        </div>
+
+        <div class="exercise" id="exerciseBox" aria-live="polite">
+          <p class="q" id="question">Haz clic en <b>Nuevo ejercicio</b> para comenzar.</p>
+          <div class="meta" id="meta"></div>
+
+          <div style="margin-top:12px" class="grid">
+            <div>
+              <label for="answer">Tu respuesta</label>
+              <input id="answer" type="text" placeholder="Ej: 12, 3/4, x=5, etc." autocomplete="off" />
+              <div class="note" id="answerNote"></div>
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <button class="btn good" id="btnCheck" style="width:100%">✅ Verificar respuesta</button>
+              <div class="note">Tip: usa <span class="tag">/</span> para fracciones (ej: <span class="tag">3/4</span>) y <span class="tag">,</span> o <span class="tag">.</span> para decimales.</div>
+            </div>
+          </div>
+
+          <div class="feedback" id="feedback">Aún no hay un ejercicio activo.</div>
+
+          <details id="hintPanel">
+            <summary>Ver pista</summary>
+            <div class="inside" id="hintText">—</div>
+          </details>
+
+          <details id="solutionPanel">
+            <summary>Ver solución explicada</summary>
+            <div class="inside" id="solutionText">—</div>
+          </details>
+        </div>
+
+        <div class="note">
+          Sugerencia didáctica: cambia de tema por semana (ej. <b>Estadística</b> → <b>Fracciones</b> → <b>Ecuaciones</b>) y revisa el historial para detectar patrones de error.
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel lateral: historial + biblioteca -->
+    <aside class="card" aria-label="Historial y temas">
+      <div class="hd">
+        <div>
+          <h2>Historial de intentos</h2>
+          <small>Queda guardado durante esta sesión del navegador.</small>
+        </div>
+      </div>
+
+      <div class="bd">
+        <table aria-label="Tabla de historial">
+          <thead>
+            <tr>
+              <th>Ejercicio</th>
+              <th>Tu respuesta</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody id="history"></tbody>
+        </table>
+
+        <div class="note" style="margin-top:14px">
+          <b>Biblioteca de temas</b> (puedes ampliarla):
+          <ul>
+            <li><span class="tag">Estadística</span> datos, media, mediana, moda, rango.</li>
+            <li><span class="tag">Fracciones</span> suma, resta, multiplicación, simplificación.</li>
+            <li><span class="tag">Ecuaciones</span> despeje de <code>x</code> y verificación sustituyendo.</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    /***********************
+     * Utilidades
+     ***********************/
+    const $ = (id) => document.getElementById(id);
+
+    function randInt(min, max){
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function gcd(a,b){
+      a = Math.abs(a); b = Math.abs(b);
+      while(b){ const t=b; b=a%b; a=t; }
+      return a || 1;
+    }
+
+    function simplifyFraction(n, d){
+      if(d === 0) return {n, d};
+      const sign = (n*d < 0) ? -1 : 1;
+      n = Math.abs(n); d = Math.abs(d);
+      const g = gcd(n, d);
+      return { n: sign*(n/g), d: d/g };
+    }
+
+    function parseNumberOrFraction(input){
+      // Acepta: "3/4", "0.75", "0,75", "  -2  "
+      const s = String(input).trim().replace(",", ".");
+      if(!s) return null;
+      if(s.includes("/")){
+        const parts = s.split("/").map(p => p.trim());
+        if(parts.length !== 2) return null;
+        const n = Number(parts[0]);
+        const d = Number(parts[1]);
+        if(!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return null;
+        const frac = simplifyFraction(n, d);
+        return { type:"fraction", n: frac.n, d: frac.d, value: frac.n/frac.d };
+      }
+      const v = Number(s);
+      if(!Number.isFinite(v)) return null;
+      return { type:"number", value: v };
+    }
+
+    function approxEqual(a, b, eps=1e-6){
+      return Math.abs(a-b) <= eps;
+    }
+
+    function formatDataArray(arr){
+      return arr.join(", ");
+    }
+
+    /***********************
+     * Generadores por tema
+     ***********************/
+    function generateStats(grade){
+      const n = grade <= 7 ? randInt(5,7) : grade <= 9 ? randInt(7,9) : randInt(9,11);
+      const min = grade <= 7 ? 1 : grade <= 9 ? 0 : -5;
+      const max = grade <= 7 ? 12 : grade <= 9 ? 20 : 30;
+
+      let data = Array.from({length:n}, () => randInt(min, max));
+      if(Math.random() < 0.7){
+        const idx = randInt(0, n-1);
+        const idx2 = randInt(0, n-1);
+        data[idx2] = data[idx];
+      }
+
+      const taskType = ["media","mediana","moda"][randInt(0,2)];
+      const sorted = [...data].sort((a,b)=>a-b);
+
+      let answer, explanation, hint;
+
+      if(taskType === "media"){
+        const sum = data.reduce((a,b)=>a+b,0);
+        const mean = sum / data.length;
+        answer = { value: mean };
+        hint = "Suma todos los datos y divide entre la cantidad de datos.";
+        explanation =
+          `Datos: <code>${formatDataArray(data)}</code><br>` +
+          `Suma: <code>${sum}</code><br>` +
+          `Cantidad: <code>${data.length}</code><br>` +
+          `Media = suma / cantidad = <code>${sum} / ${data.length} = ${mean}</code>`;
+      }
+
+      if(taskType === "mediana"){
+        let median;
+        if(sorted.length % 2 === 1){
+          median = sorted[(sorted.length-1)/2];
+          explanation =
+            `Ordena los datos: <code>${formatDataArray(sorted)}</code><br>` +
+            `Como hay <code>${sorted.length}</code> datos (impar), la mediana es el valor central: <code>${median}</code>.`;
+        } else {
+          const a = sorted[sorted.length/2 - 1];
+          const b = sorted[sorted.length/2];
+          median = (a+b)/2;
+          explanation =
+            `Ordena los datos: <code>${formatDataArray(sorted)}</code><br>` +
+            `Como hay <code>${sorted.length}</code> datos (par), la mediana es el promedio de los dos centrales: <code>(${a}+${b})/2 = ${median}</code>.`;
+        }
+        answer = { value: median };
+        hint = "Ordena los datos. Si la cantidad es impar, toma el del centro; si es par, promedia los dos centrales.";
+      }
+
+      if(taskType === "moda"){
+        const freq = new Map();
+        for(const x of data) freq.set(x, (freq.get(x)||0)+1);
+        let bestVal = null, bestCount = -1;
+        for(const [k,v] of freq.entries()){
+          if(v > bestCount){ bestCount = v; bestVal = k; }
+        }
+        answer = { value: bestVal };
+        hint = "Cuenta cuántas veces aparece cada número. La moda es el que más se repite.";
+        const rows = [...freq.entries()].sort((a,b)=>b[1]-a[1])
+          .map(([k,v])=>`<code>${k}</code> → ${v} veces`).join("<br>");
+        explanation =
+          `Datos: <code>${formatDataArray(data)}</code><br>` +
+          `Frecuencias:<br>${rows}<br>` +
+          `Moda = el valor con mayor frecuencia → <code>${bestVal}</code>.`;
+      }
+
+      return {
+        topic: "stats",
+        title: `Estadística: calcula la ${taskType}`,
+        question: `Con los datos: <span class="mono">${formatDataArray(data)}</span> ¿cuál es la <b>${taskType}</b>?`,
+        answer,
+        hint,
+        explanation,
+        meta: { grado: grade, tipo: taskType, datos: data }
+      };
+    }
+
+    function generateFractions(grade){
+      const denomMax = grade <= 7 ? 9 : grade <= 9 ? 12 : 20;
+
+      function randFrac(){
+        const d = randInt(2, denomMax);
+        const n = randInt(1, d-1);
+        return simplifyFraction(n, d);
+      }
+
+      const op = ["+","-","×"][randInt(0,2)];
+      let a = randFrac();
+      let b = randFrac();
+
+      if(op === "-" && Math.random() < 0.7){
+        const va = a.n/a.d, vb = b.n/b.d;
+        if(va < vb){ const t=a; a=b; b=t; }
+      }
+
+      let resN, resD;
+      if(op === "+"){
+        resN = a.n*b.d + b.n*a.d;
+        resD = a.d*b.d;
+      } else if(op === "-"){
+        resN = a.n*b.d - b.n*a.d;
+        resD = a.d*b.d;
+      } else {
+        resN = a.n*b.n;
+        resD = a.d*b.d;
+      }
+      const simp = simplifyFraction(resN, resD);
+
+      const answer = { n: simp.n, d: simp.d, value: simp.n/simp.d };
+      const hint = op === "×"
+        ? "Multiplica numerador con numerador y denominador con denominador. Luego simplifica."
+        : "Busca denominador común: a/b ± c/d = (ad ± bc) / bd. Luego simplifica.";
+
+      const explanation =
+        `Ejercicio: <code>${a.n}/${a.d} ${op} ${b.n}/${b.d}</code><br>` +
+        (op === "×"
+          ? `Multiplicación: <code>(${a.n}×${b.n}) / (${a.d}×${b.d}) = ${resN}/${resD}</code><br>`
+          : `Denominador común: <code>${a.d}×${b.d} = ${resD}</code><br>` +
+            `Numerador: <code>${op==="+" ? `${a.n}×${b.d} + ${b.n}×${a.d}` : `${a.n}×${b.d} - ${b.n}×${a.d}` } = ${resN}</code><br>` +
+            `Resultado: <code>${resN}/${resD}</code><br>`
+        ) +
+        `Simplificación: <code>${simp.n}/${simp.d}</code>`;
+
+      return {
+        topic: "fractions",
+        title: "Fracciones: operación y simplificación",
+        question: `Resuelve: <span class="mono">${a.n}/${a.d} ${op} ${b.n}/${b.d}</span> (responde como fracción simplificada, ej: 3/4)`,
+        answer,
+        hint,
+        explanation,
+        meta: { grado: grade, op, a, b }
+      };
+    }
+
+    function generateLinear(grade){
+      const aMin = grade <= 7 ? 1 : grade <= 9 ? -6 : -12;
+      const aMax = grade <= 7 ? 9 : grade <= 9 ? 12 : 20;
+
+      let a = randInt(aMin, aMax);
+      while(a === 0) a = randInt(aMin, aMax);
+
+      const b = randInt(grade <= 7 ? -10 : -20, grade <= 9 ? 20 : 40);
+      const x = randInt(grade <= 7 ? -6 : -10, grade <= 9 ? 10 : 16);
+      const c = a*x + b;
+
+      const hint = "Aísla x: pasa b al otro lado (resta b) y luego divide entre a.";
+      const explanation =
+        `Ecuación: <code>${a}x + (${b}) = ${c}</code><br>` +
+        `1) Resta <code>${b}</code> a ambos lados: <code>${a}x = ${c} - (${b}) = ${c - b}</code><br>` +
+        `2) Divide entre <code>${a}</code>: <code>x = (${c - b}) / ${a} = ${x}</code><br>` +
+        `Verificación: <code>${a}(${x}) + (${b}) = ${a*x + b} = ${c}</code> ✅`;
+
+      return {
+        topic: "linear",
+        title: "Ecuaciones lineales: despeje de x",
+        question: `Resuelve para <b>x</b>: <span class="mono">${a}x ${b>=0?"+":"-"} ${Math.abs(b)} = ${c}</span> (responde solo el valor de x)`,
+        answer: { value: x },
+        hint,
+        explanation,
+        meta: { grado: grade, a, b, c, x }
+      };
+    }
+
+    function buildExercise(grade, topic){
+      if(topic === "stats") return generateStats(grade);
+      if(topic === "fractions") return generateFractions(grade);
+      return generateLinear(grade);
+    }
+
+    const state = { current: null, hits: 0, fails: 0, streak: 0, history: [] };
+
+    function setKpis(){
+      $("hits").textContent = state.hits;
+      $("fails").textContent = state.fails;
+      $("streak").textContent = state.streak;
+    }
+
+    function renderHistory(){
+      const tbody = $("history");
+      tbody.innerHTML = "";
+      for(const item of state.history.slice(-12).reverse()){
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <div style="display:flex; flex-direction:column; gap:4px">
+              <span class="tag">${item.topic}</span>
+              <span style="color:var(--text)">${item.short}</span>
+            </div>
+          </td>
+          <td><span class="mono">${item.user}</span></td>
+          <td>${item.ok ? `<span class="mono" style="border-color:rgba(23,105,255,.45); color: var(--accent-2)">OK</span>`
+                        : `<span class="mono" style="border-color:rgba(239,68,68,.35); color:#b91c1c">ERROR</span>`}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function setExerciseUI(ex){
+      state.current = ex;
+      $("question").innerHTML = ex.question;
+      $("meta").innerHTML = `
+        <span class="mono">Grado: ${ex.meta.grado}°</span>
+        <span class="mono">Tema: ${ex.topic}</span>
+        <span class="mono">Nivel: ${difficultyLabel(ex.meta.grado)}</span>
+      `;
+      $("answer").value = "";
+      $("feedback").className = "feedback";
+      $("feedback").textContent = "Escribe tu respuesta y presiona “Verificar respuesta”.";
+      $("hintText").innerHTML = ex.hint;
+      $("solutionText").innerHTML = ex.explanation;
+      $("hintPanel").open = false;
+      $("solutionPanel").open = false;
+
+      $("answerNote").textContent = (ex.topic === "fractions")
+        ? "Formato esperado: fracción simplificada (ej: 2/3)."
+        : (ex.topic === "linear")
+          ? "Formato esperado: solo el número (ej: 5 o -3)."
+          : "Formato esperado: número. Si es decimal, usa . o , (ej: 2.5).";
+    }
+
+    function difficultyLabel(grade){
+      if(grade <= 7) return "Básico";
+      if(grade <= 9) return "Intermedio";
+      return "Avanzado";
+    }
+
+    function shortFromQuestion(q){
+      const tmp = document.createElement("div");
+      tmp.innerHTML = q;
+      const text = tmp.textContent || tmp.innerText || "";
+      return text.length > 44 ? text.slice(0,44) + "…" : text;
+    }
+
+    function markFeedback(ok, msg){
+      $("feedback").className = "feedback " + (ok ? "ok" : "bad");
+      $("feedback").innerHTML = msg;
+    }
+
+    function checkAnswer(){
+      const ex = state.current;
+      if(!ex){
+        markFeedback(false, "Primero genera un ejercicio con <b>Nuevo ejercicio</b>.");
+        return;
+      }
+
+      const raw = $("answer").value.trim();
+      if(!raw){
+        markFeedback(false, "Escribe una respuesta antes de verificar.");
+        return;
+      }
+
+      let ok = false;
+      let correctText = "";
+
+      if(ex.topic === "fractions"){
+        const parsed = parseNumberOrFraction(raw);
+        if(!parsed){
+          markFeedback(false, "No pude leer tu fracción. Usa el formato <b>a/b</b> (ej: 3/4).");
+          return;
+        }
+        ok = approxEqual(parsed.value, ex.answer.value, 1e-6);
+        correctText = `${ex.answer.n}/${ex.answer.d}`;
+      } else {
+        const parsed = parseNumberOrFraction(raw);
+        if(!parsed){
+          markFeedback(false, "No pude leer tu número. Revisa el formato (ej: -2, 3.5).");
+          return;
+        }
+        ok = approxEqual(parsed.value, ex.answer.value, 1e-6);
+        correctText = String(ex.answer.value);
+      }
+
+      if(ok){
+        state.hits += 1;
+        state.streak += 1;
+        markFeedback(true,
+          `✅ <b>Correcto.</b> Tu respuesta coincide.<br>` +
+          `Sugerencia: abre <b>Ver solución</b> para repasar el procedimiento.`
+        );
+      } else {
+        state.fails += 1;
+        state.streak = 0;
+        markFeedback(false,
+          `❌ <b>No coincide.</b><br>` +
+          `Respuesta correcta: <span class="mono">${correctText}</span><br>` +
+          `Tip: revisa la <b>pista</b> y vuelve a intentar con otro ejercicio.`
+        );
+      }
+
+      state.history.push({ topic: ex.topic, short: shortFromQuestion(ex.question), user: raw, ok });
+      setKpis();
+      renderHistory();
+    }
+
+    function newExercise(){
+      const grade = Number($("grade").value);
+      const topic = $("topic").value;
+      const ex = buildExercise(grade, topic);
+      setExerciseUI(ex);
+    }
+
+    function resetAll(){
+      state.current = null;
+      state.hits = 0;
+      state.fails = 0;
+      state.streak = 0;
+      state.history = [];
+      setKpis();
+      renderHistory();
+      $("question").innerHTML = 'Haz clic en <b>Nuevo ejercicio</b> para comenzar.';
+      $("meta").innerHTML = "";
+      $("answer").value = "";
+      $("feedback").className = "feedback";
+      $("feedback").textContent = "Aún no hay un ejercicio activo.";
+      $("hintText").innerHTML = "—";
+      $("solutionText").innerHTML = "—";
+      $("hintPanel").open = false;
+      $("solutionPanel").open = false;
+      $("answerNote").textContent = "";
+    }
+
+    $("btnNew").addEventListener("click", newExercise);
+    $("btnCheck").addEventListener("click", checkAnswer);
+    $("answer").addEventListener("keydown", (e) => { if(e.key === "Enter") checkAnswer(); });
+
+    $("btnHint").addEventListener("click", () => {
+      if(!state.current) return markFeedback(false, "Genera un ejercicio para ver la pista.");
+      $("hintPanel").open = true;
+      $("hintPanel").scrollIntoView({behavior:"smooth", block:"center"});
+    });
+
+    $("btnSolution").addEventListener("click", () => {
+      if(!state.current) return markFeedback(false, "Genera un ejercicio para ver la solución.");
+      $("solutionPanel").open = true;
+      $("solutionPanel").scrollIntoView({behavior:"smooth", block:"center"});
+    });
+
+    $("btnReset").addEventListener("click", resetAll);
+
+    newExercise();
+    setKpis();
+    renderHistory();
+  </script>
+</body>
+</html>
